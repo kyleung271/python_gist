@@ -6,6 +6,7 @@ import pandas as pd
 import scipy.sparse as sprs
 from sklearn.base import BaseEstimator, TransformerMixin
 
+
 epsilon = np.finfo(float).eps
 
 
@@ -100,7 +101,6 @@ class ResponseCodingTransformer(BaseEstimator, TransformerMixin):
         return self
 
     def transform(self, X):
-        # For numeric stability, such as when X = 0
         return np.exp2(X @ self.log2_p / (X.sum(axis=1).reshape(-1, 1) + epsilon))
 
 
