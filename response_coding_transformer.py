@@ -6,7 +6,6 @@ import pandas as pd
 import scipy.sparse as sprs
 from sklearn.base import BaseEstimator, TransformerMixin
 
-
 epsilon = np.finfo(float).eps
 
 
@@ -74,6 +73,10 @@ class ResponseCodingTransformer(BaseEstimator, TransformerMixin):
     >>> encoder.fit_transform(["Testing", "Testing again"], [1, 0])
     matrix([[0.5       , 0.5       ],
             [0.40824829, 0.57735027]])
+
+    >>> encoder.transform(["foo", "foo again"])
+    matrix([[0.        , 0.        ],
+            [0.33333333, 0.66666667]])
     """
 
     def __init__(self, prob_func=naive_count, **kwargs):
@@ -101,7 +104,7 @@ class ResponseCodingTransformer(BaseEstimator, TransformerMixin):
         return self
 
     def transform(self, X):
-        return np.exp2(X @ self.log2_p / (X.sum(axis=1).reshape(-1, 1) + epsilon))
+        return np.exp2((X @ self.log2_p - epsilon) / X.sum(axis=1).reshape(-1, 1))
 
 
 if __name__ == "__main__":
