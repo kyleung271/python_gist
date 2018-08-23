@@ -1,6 +1,4 @@
 #!/usr/bin/env python3
-from functools import partial
-
 import numpy as np
 import pandas as pd
 import scipy.sparse as sprs
@@ -38,7 +36,7 @@ def additive_smoothing(count, alpha):
 class ResponseCodingTransformer(BaseEstimator, TransformerMixin):
     """
     Simple Response coding.
-
+    >>> from functools import partial
     >>> from sklearn.pipeline import make_pipeline
     >>> from sklearn.preprocessing import OneHotEncoder
     >>> from sklearn.feature_extraction.text import CountVectorizer
@@ -60,7 +58,7 @@ class ResponseCodingTransformer(BaseEstimator, TransformerMixin):
     Custom probability distribution estimator can be used.
     Any extra keyword argumants are passed through.
 
-    >>> rst = ResponseCodingTransformer(additive_smoothing, alpha=1)
+    >>> rst = ResponseCodingTransformer(partial(additive_smoothing, alpha=1))
     >>> encoder = make_pipeline(OneHotEncoder(), rst)
     >>> encoder.fit_transform([[1], [2], [1]], ["a", "b", "b"])
     matrix([[0.5       , 0.5       ],
@@ -79,9 +77,8 @@ class ResponseCodingTransformer(BaseEstimator, TransformerMixin):
             [0.33333333, 0.66666667]])
     """
 
-    def __init__(self, prob_func=naive_count, **kwargs):
-        # prob_func warpped in list to prevent BaseEstimator messing with the closure
-        self.prob_func = [partial(prob_func, **kwargs)]
+    def __init__(self, prob_func=naive_count):
+        self.prob_func = prob_func
 
     def fit(self, X, y):
         y = np.atleast_1d(y)
@@ -98,7 +95,7 @@ class ResponseCodingTransformer(BaseEstimator, TransformerMixin):
             k = token_to_index[y[i]]
             count[j, k] += c
 
-        prob = np.apply_along_axis(self.prob_func[0], 1, count)
+        prob = np.apply_along_axis(self.prob_func, 1, count)
 
         self.log2_p = np.log2(prob)
         return self
